@@ -44,7 +44,7 @@ parser.add_argument("--l1_weight", type=float, default=100.0, help="weight on L1
 parser.add_argument("--gan_weight", type=float, default=1.0, help="weight on GAN term for generator gradient")
 
 # export options
-parser.add_argument("--output_filetype", default="png", choices=["png", "jpeg"])
+parser.add_argument("--output_filetype", default="png", choices=["png", "jpeg"]) #to do add pickle type for depth.
 a = parser.parse_args()
 
 EPS = 1e-12
@@ -90,7 +90,7 @@ def augment(image, brightness):
     return rgb
 
 
-def conv(batch_input, out_channels, stride):
+def conv(batch_input, out_channels, stride): #to do chang conv layer for stereo image
     with tf.variable_scope("conv"):
         in_channels = batch_input.get_shape()[3]
         filter = tf.get_variable("filter", [4, 4, in_channels, out_channels], dtype=tf.float32, initializer=tf.random_normal_initializer(0, 0.02))
