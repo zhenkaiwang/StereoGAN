@@ -1,4 +1,4 @@
-# pix2pix-tensorflow
+# StereoGAN
 
 Based on [pix2pix](https://phillipi.github.io/pix2pix/) by Isola et al.
 
