@@ -480,7 +480,8 @@ def main():
         f.write(json.dumps(vars(a), sort_keys=True, indent=4))
 
     if a.mode == "export":
-        # to do
+        # to do:
+        # need to rewrite export mode, with the correct data format and size.
 
         input = tf.placeholder(tf.string, shape=[1])
         input_data = tf.decode_base64(input[0])
