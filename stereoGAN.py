@@ -23,8 +23,8 @@ parser.add_argument("--output_dir", default= "outputs",required=True, help="wher
 parser.add_argument("--checkpoint", default=None, help="directory with checkpoint to resume training from or use for testing") # done: set default path for the checkpoint directory
 parser.add_argument("--seed", type=int)
 
-parser.add_argument("--max_steps", type=int, default=1000,help="number of training steps (0 to disable)")
-parser.add_argument("--max_epochs", type=int, default=200, help="number of training epochs")
+parser.add_argument("--max_steps", type=int,help="number of training steps (0 to disable)")
+parser.add_argument("--max_epochs", type=int, default=20, help="number of training epochs")
 parser.add_argument("--summary_freq", type=int, default=100, help="update summaries every summary_freq steps")
 parser.add_argument("--progress_freq", type=int, default=50, help="display progress every progress_freq steps")
 parser.add_argument("--trace_freq", type=int, default=0, help="trace execution every trace_freq steps")
@@ -209,7 +209,7 @@ def load_examples():
         if (len(raw_input_LR.get_shape().as_list()) != 3):
             raise Exception("len(raw_input_L.get_shape().as_list()) != 3")
         
-        assertion = tf.assert_equal(tf.shape(raw_input_LR)[2], 2, message="image does not have 2 channels") # check the image data has 2 channels
+        assertion = tf.assert_equal(tf.shape(raw_input_LR)[-1], 2, message="image does not have 2 channels") # check the image data has 2 channels
         with tf.control_dependencies([assertion]):
             raw_input_LR = tf.identity(raw_input_LR)
 
@@ -240,7 +240,7 @@ def create_generator(generator_inputs, generator_outputs_channels):
     layers = []
 
     # encoder_1: [batch, 128, 128, in_channels=2] => [batch, 64, 64, ngf]
-    assertion = tf.assert_equal(tf.shape(generator_inputs)[2], 2, message="image does not have 2 channels")
+    assertion = tf.assert_equal(tf.shape(generator_inputs)[-1], 2, message="image does not have 2 channels")
     with tf.control_dependencies([assertion]):
             generator_inputs = tf.identity(generator_inputs)
     with tf.variable_scope("encoder_1"):
