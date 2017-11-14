@@ -20,7 +20,6 @@ parser.add_argument("--input_dir", default="/cvgl2/u/hirose/dataset_depth/", hel
 parser.add_argument("--depth_dir", default="/cvgl2/u/hhlics/dataset_depth/", help="path to folder containing images")# done: set default path to the dataset
 parser.add_argument("--mode", required=True, choices=["train", "test", "export"])
 parser.add_argument("--output_dir", default= "outputs",required=True, help="where to put output files") # done: set default path for the output directory
-parser.add_argument("--seed", type=int)
 parser.add_argument("--checkpoint", default="ckpt", help="directory with checkpoint to resume training from or use for testing") # done: set default path for the checkpoint directory
 parser.add_argument("--seed", type=int)
 
@@ -150,7 +149,6 @@ def load_examples():
     if a.input_dir is None or not os.path.exists(a.input_dir):
         raise Exception("input_dir does not exist")
 
-    convert_depth_file(a.input_dir + "/depth/", a.depth_dir + "/depth/")
     input_L_paths = glob.glob(os.path.join(a.input_dir + "/img_L_1/", "*.jpg"))
     input_R_paths = glob.glob(os.path.join(a.input_dir + "/img_R_1/", "*.jpg"))
     depth_paths = glob.glob(os.path.join(a.depth_dir + "/depth_1/", "*.jpg"))
@@ -283,7 +281,6 @@ def create_generator(generator_inputs, generator_outputs_channels):
 
             layers.append(output)
 
-    # decoder_1: [batch, 64, 64, ngf * 2] => [batch, 128, 128, generator_outputs_channels＝1]
     with tf.variable_scope("decoder_1"):
         input = tf.concat([layers[-1], layers[0]], axis=3)
         rectified = tf.nn.relu(input)
