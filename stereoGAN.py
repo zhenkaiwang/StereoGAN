@@ -212,8 +212,8 @@ def load_examples():
         with tf.control_dependencies([assertion]):
             raw_input_LR = tf.identity(raw_input_LR)
 
-        raw_input_LR.set_shape([None, None, 2]) #Set the image channels size to be 2
-        raw_input_depth.set_shape([None, None, 1]) 
+        raw_input_LR.set_shape([128, 128, 2]) #Set the image channels size to be 2
+        raw_input_depth.set_shape([128, 128, 1]) 
 
         a_images = preprocess(raw_input_LR)
         b_images = preprocess(raw_input_depth)
