@@ -159,7 +159,7 @@ def load_examples():
     if len(input_R_paths) == 0:
         raise Exception(a.input_dir + "/img_R/" + " contains no image files")
     if len(depth_paths) == 0:
-        raise Exception(a.input_dir + "/depth_1/" + " contains no depth files")
+        raise Exception(a.depth_dir + "/depth_1/" + " contains no depth files")
 
     def get_name(path):
         name, _ = os.path.splitext(os.path.basename(path))
@@ -190,13 +190,14 @@ def load_examples():
         paths_R.set_shape([]) 
         paths_depth.set_shape([]) 
 
-        raw_input_L = decode(contents_L)
-        raw_input_R = decode(contents_R)
-        raw_input_depth = decode(contents_depth)
+        raw_input_L = decode(contents_L,channels=1)
+        raw_input_R = decode(contents_R,channels=1)
+        raw_input_depth = decode(contents_depth,channels=1)
         raw_input_L = tf.image.convert_image_dtype(raw_input_L, dtype=tf.float32)
         raw_input_R = tf.image.convert_image_dtype(raw_input_R, dtype=tf.float32)
-        raw_input_L = tf.image.rgb_to_grayscale(raw_input_L)
-        raw_input_R = tf.image.rgb_to_grayscale(raw_input_R)
+        # raw_input_L = tf.image.rgb_to_grayscale(raw_input_L)
+        # raw_input_R = tf.image.rgb_to_grayscale(raw_input_R)
+        # raw_input_depth = = tf.image.rgb_to_grayscale(raw_input_depth)
         raw_input_depth = tf.image.convert_image_dtype(raw_input_depth, dtype=tf.float32)
         print(raw_input_L.get_shape().as_list())
         print(raw_input_depth.get_shape().as_list())
@@ -688,8 +689,8 @@ def main():
                 if should(a.summary_freq):
                     fetches["summary"] = sv.summary_op
 
-                # if should(a.display_freq):
-                #     fetches["display"] = display_fetches
+                if should(a.display_freq):
+                    fetches["display"] = display_fetches
 
                 results = sess.run(fetches, options=options, run_metadata=run_metadata)
 
@@ -697,10 +698,10 @@ def main():
                     print("recording summary")
                     sv.summary_writer.add_summary(results["summary"], results["global_step"])
 
-                # if should(a.display_freq):
-                #     print("saving display images")
-                #     filesets = save_images(results["display"], step=results["global_step"])
-                #     append_index(filesets, step=True)
+                if should(a.display_freq):
+                    print("saving display images")
+                    filesets = save_images(results["display"], step=results["global_step"])
+                    append_index(filesets, step=True)
 
                 if should(a.trace_freq):
                     print("recording trace")
