@@ -239,6 +239,7 @@ def create_generator(generator_inputs, generator_outputs_channels):
     layers = []
 
     # encoder_1: [batch, 128, 128, in_channels=2] => [batch, 64, 64, ngf]
+    assertion = tf.assert_equal(tf.shape(generator_inputs)[2], 2, message="image does not have 2 channels")
     with tf.variable_scope("encoder_1"):
         output = conv(generator_inputs, a.ngf, stride=2)
         layers.append(output)
@@ -460,7 +461,7 @@ def main():
     if not os.path.exists(a.output_dir):
         os.makedirs(a.output_dir)
 
-    if a.mode == "test":
+    if a.mode == "test" or a.mode=="export":
         if a.checkpoint is None:
             raise Exception("checkpoint required for test mode")
 
@@ -575,24 +576,24 @@ def main():
     print('converted output shape: ', converted_outputs.get_shape().as_list())
 
     with tf.name_scope("encode_images"):
-        # display_fetches = {
-        #     "pathsL": examples.pathsL,
-        #     "pathsR": examples.pathsR,
-        #     "pathsD": examples.pathsD,
-        #     "inputsL": tf.map_fn(tf.image.encode_png, converted_inputs_L, dtype=tf.string, name="inputL_pngs"),
-        #     "inputsR": tf.map_fn(tf.image.encode_png, converted_inputs_R, dtype=tf.string, name="inputR_pngs"),
-        #     "targets": tf.map_fn(tf.image.encode_png, converted_targets, dtype=tf.string, name="target_pngs"),
-        #     "outputs": tf.map_fn(tf.image.encode_png, converted_outputs, dtype=tf.string, name="output_pngs"),
-        # }
         display_fetches = {
             "pathsL": examples.pathsL,
             "pathsR": examples.pathsR,
             "pathsD": examples.pathsD,
-            "inputsL": converted_inputs_L,
-            "inputsR": converted_inputs_R,
-            "targets": converted_targets,
-            "outputs": converted_outputs,
+            "inputsL": tf.map_fn(tf.image.encode_png, converted_inputs_L, dtype=tf.string, name="inputL_pngs"),
+            "inputsR": tf.map_fn(tf.image.encode_png, converted_inputs_R, dtype=tf.string, name="inputR_pngs"),
+            "targets": tf.map_fn(tf.image.encode_png, converted_targets, dtype=tf.string, name="target_pngs"),
+            "outputs": tf.map_fn(tf.image.encode_png, converted_outputs, dtype=tf.string, name="output_pngs"),
         }
+        # display_fetches = {
+        #     "pathsL": examples.pathsL,
+        #     "pathsR": examples.pathsR,
+        #     "pathsD": examples.pathsD,
+        #     "inputsL": converted_inputs_L,
+        #     "inputsR": converted_inputs_R,
+        #     "targets": converted_targets,
+        #     "outputs": converted_outputs,
+        # }
 
     # summaries
     with tf.name_scope("inputs_summary"):
@@ -658,6 +659,7 @@ def main():
         else:
             # training
             start = time.time()
+            print("enter training mode")
 
             for step in range(max_steps):
                 def should(freq):
@@ -683,8 +685,8 @@ def main():
                 if should(a.summary_freq):
                     fetches["summary"] = sv.summary_op
 
-                if should(a.display_freq):
-                    fetches["display"] = display_fetches
+                # if should(a.display_freq):
+                #     fetches["display"] = display_fetches
 
                 results = sess.run(fetches, options=options, run_metadata=run_metadata)
 
@@ -692,10 +694,10 @@ def main():
                     print("recording summary")
                     sv.summary_writer.add_summary(results["summary"], results["global_step"])
 
-                if should(a.display_freq):
-                    print("saving display images")
-                    filesets = save_images(results["display"], step=results["global_step"])
-                    append_index(filesets, step=True)
+                # if should(a.display_freq):
+                #     print("saving display images")
+                #     filesets = save_images(results["display"], step=results["global_step"])
+                #     append_index(filesets, step=True)
 
                 if should(a.trace_freq):
                     print("recording trace")
