@@ -179,9 +179,9 @@ def load_examples():
         depth_paths = sorted(depth_paths)
 
     with tf.name_scope("load_images"):
-        path_L_queue = tf.train.string_input_producer(input_L_paths, shuffle=False)#a.mode == "train")
-        path_R_queue = tf.train.string_input_producer(input_R_paths, shuffle=False)#a.mode == "train")
-        depth_queue = tf.train.string_input_producer(depth_paths, shuffle=False)#a.mode == "train")
+        path_L_queue = tf.train.string_input_producer(input_L_paths, shuffle=True, seed=42)#a.mode == "train")
+        path_R_queue = tf.train.string_input_producer(input_R_paths, shuffle=True, seed=42)#a.mode == "train")
+        depth_queue = tf.train.string_input_producer(depth_paths, shuffle=True, seed=42)#a.mode == "train")
         reader = tf.WholeFileReader()
         paths_L, contents_L = reader.read(path_L_queue)
         paths_R, contents_R = reader.read(path_R_queue)
@@ -212,31 +212,6 @@ def load_examples():
         b_images = preprocess(raw_input_depth[:,:])
 
     inputs, targets = [a_images, b_images]
-
-    # synchronize seed for image operations so that we do the same operations to both
-    # input and output images
-    seed = random.randint(0, 2**31 - 1)
-    def transform(image):
-        r = image
-        if a.flip:
-            r = tf.image.random_flip_left_right(r, seed=seed)
-
-        # area produces a nice downscaling, but does nearest neighbor for upscaling
-        # assume we're going to be doing downscaling here
-        r = tf.image.resize_images(r, [a.scale_size, a.scale_size], method=tf.image.ResizeMethod.AREA)
-
-        offset = tf.cast(tf.floor(tf.random_uniform([2], 0, a.scale_size - CROP_SIZE + 1, seed=seed)), dtype=tf.int32)
-        if a.scale_size > CROP_SIZE:
-            r = tf.image.crop_to_bounding_box(r, offset[0], offset[1], CROP_SIZE, CROP_SIZE)
-        elif a.scale_size < CROP_SIZE:
-            raise Exception("scale size cannot be less than crop size")
-        return r
-
-    with tf.name_scope("input_images"):
-        input_images = transform(inputs)
-
-    with tf.name_scope("target_images"):
-        target_images = transform(targets)
 
     paths_batch, inputs_batch, targets_batch = tf.train.batch([paths, input_images, target_images], batch_size=a.batch_size)
     steps_per_epoch = int(math.ceil(len(input_paths) / a.batch_size))
