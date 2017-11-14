@@ -16,7 +16,7 @@ import time
 from PIL import Image
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--input_dir", default="/cvgl2/u/hirose/dataset_depth/", help="path to folder containing images")# done: set default path to the dataset
+parser.add_argument("--input_dir", default="/cvgl2/u/hhlics/dataset_depth/", help="path to folder containing images")# done: set default path to the dataset
 parser.add_argument("--depth_dir", default="/cvgl2/u/hhlics/dataset_depth/", help="path to folder containing images")# done: set default path to the dataset
 parser.add_argument("--mode", required=True, choices=["train", "test", "export"])
 parser.add_argument("--output_dir", default= "outputs",required=True, help="where to put output files") # done: set default path for the output directory
@@ -28,8 +28,8 @@ parser.add_argument("--max_epochs", type=int, default=200, help="number of train
 parser.add_argument("--summary_freq", type=int, default=100, help="update summaries every summary_freq steps")
 parser.add_argument("--progress_freq", type=int, default=50, help="display progress every progress_freq steps")
 parser.add_argument("--trace_freq", type=int, default=0, help="trace execution every trace_freq steps")
-parser.add_argument("--display_freq", type=int, default=1000, help="write current training images every display_freq steps")
-parser.add_argument("--save_freq", type=int, default=5000, help="save model every save_freq steps, 0 to disable")
+parser.add_argument("--display_freq", type=int, default=100, help="write current training images every display_freq steps")
+parser.add_argument("--save_freq", type=int, default=1000, help="save model every save_freq steps, 0 to disable")
 
 parser.add_argument("--aspect_ratio", type=float, default=1.0, help="aspect ratio of output images (width/height)")
 parser.add_argument("--batch_size", type=int, default=16, help="number of images in batch") #set default batch size to be 16
@@ -49,7 +49,7 @@ parser.add_argument("--output_filetype", default="png", choices=["png", "jpeg","
 a = parser.parse_args()
 
 EPS = 1e-12
-CROP_SIZE = 256
+CROP_SIZE = a.scale_size
 
 Examples = collections.namedtuple("Examples", "pathsL, pathsR, pathsD, inputs, targets, count, steps_per_epoch")
 Model = collections.namedtuple("Model", "outputs, predict_real, predict_fake, discrim_loss, discrim_grads_and_vars, gen_loss_GAN, gen_loss_L1, gen_grads_and_vars, train")
@@ -193,9 +193,9 @@ def load_examples():
         raw_input_L = decode(contents_L,channels=1)
         raw_input_R = decode(contents_R,channels=1)
         raw_input_depth = decode(contents_depth,channels=1)
-        raw_input_L = tf.image.resize_images(raw_input_L, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.BICUBIC)
-        raw_input_R = tf.image.resize_images(raw_input_R, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.BICUBIC)
-        raw_input_depth = tf.image.resize_images(raw_input_depth, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.BICUBIC)
+        # raw_input_L = tf.image.resize_images(raw_input_L, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.BICUBIC)
+        # raw_input_R = tf.image.resize_images(raw_input_R, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.BICUBIC)
+        # raw_input_depth = tf.image.resize_images(raw_input_depth, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.BICUBIC)
         raw_input_L = tf.image.convert_image_dtype(raw_input_L, dtype=tf.float32)
         raw_input_R = tf.image.convert_image_dtype(raw_input_R, dtype=tf.float32)
         raw_input_depth = tf.image.convert_image_dtype(raw_input_depth, dtype=tf.float32)
@@ -558,7 +558,7 @@ def main():
         # if a.aspect_ratio != 1.0:
             # # upscale to correct aspect ratio
             # size = [CROP_SIZE, int(round(CROP_SIZE * a.aspect_ratio))]
-        image = tf.image.resize_images(image, size=size, method=tf.image.ResizeMethod.BICUBIC)
+        # image = tf.image.resize_images(image, size=size, method=tf.image.ResizeMethod.BICUBIC)
 
         return tf.image.convert_image_dtype(image, dtype=tf.uint8, saturate=True)
 
