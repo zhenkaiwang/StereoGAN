@@ -36,7 +36,7 @@ parser.add_argument("--aspect_ratio", type=float, default=1.0, help="aspect rati
 parser.add_argument("--batch_size", type=int, default=16, help="number of images in batch") #set default batch size to be 16
 parser.add_argument("--ngf", type=int, default=64, help="number of generator filters in first conv layer")
 parser.add_argument("--ndf", type=int, default=64, help="number of discriminator filters in first conv layer")
-parser.add_argument("--scale_size", type=int, default=140, help="scale images to this size before cropping to 128x128")
+parser.add_argument("--scale_size", type=int, default=128, help="scale images to this size before cropping to 128x128")
 parser.add_argument("--flip", dest="flip", action="store_true", help="flip images horizontally")
 parser.add_argument("--no_flip", dest="flip", action="store_false", help="don't flip images horizontally")
 parser.set_defaults(flip=True)
@@ -401,7 +401,7 @@ def save_images(fetches, step=None):
     for i, in_path in enumerate(fetches["paths"]):
         name, _ = os.path.splitext(os.path.basename(in_path.decode("utf8")))
         fileset = {"name": name, "step": step}
-        for kind in ["inputs", "outputs", "targets"]:
+        for kind in ["inputsL","inputsR", "outputs", "targets"]:
             filename = name + "-" + kind + ".png"
             if step is not None:
                 filename = "%08d-%s" % (step, filename)
@@ -432,7 +432,7 @@ def append_index(filesets, step=False):
             index.write("<td>%d</td>" % fileset["step"])
         index.write("<td>%s</td>" % fileset["name"])
 
-        for kind in ["inputs", "outputs", "targets"]:
+        for kind in ["inputsL", "inputsR","outputs", "targets"]:
             index.write("<td><img src='images/%s'></td>" % fileset[kind])
 
         index.write("</tr>")
@@ -482,13 +482,13 @@ def main():
         input_data = tf.decode_base64(input[0])
         input_image = tf.image.decode_png(input_data)
 
-        # remove alpha channel if present
-        input_image = tf.cond(tf.equal(tf.shape(input_image)[2], 4), lambda: input_image[:,:,:3], lambda: input_image)
-        # convert grayscale to RGB
-        input_image = tf.cond(tf.equal(tf.shape(input_image)[2], 1), lambda: tf.image.grayscale_to_rgb(input_image), lambda: input_image)
+        # # remove alpha channel if present
+        # input_image = tf.cond(tf.equal(tf.shape(input_image)[2], 4), lambda: input_image[:,:,:3], lambda: input_image)
+        # # convert grayscale to RGB
+        # input_image = tf.cond(tf.equal(tf.shape(input_image)[2], 1), lambda: tf.image.grayscale_to_rgb(input_image), lambda: input_image)
 
         input_image = tf.image.convert_image_dtype(input_image, dtype=tf.float32)
-        input_image.set_shape([CROP_SIZE, CROP_SIZE, 3])
+        input_image.set_shape([CROP_SIZE, CROP_SIZE, 1])
         batch_input = tf.expand_dims(input_image, axis=0)
 
         with tf.variable_scope("generator"):
@@ -540,35 +540,38 @@ def main():
     targets = deprocess(examples.targets)
     outputs = deprocess(model.outputs)
 
-    def convert(image):
+    def convert(image,size):
         if a.aspect_ratio != 1.0:
-            # upscale to correct aspect ratio
-            size = [CROP_SIZE, int(round(CROP_SIZE * a.aspect_ratio))]
+            # # upscale to correct aspect ratio
+            # size = [CROP_SIZE, int(round(CROP_SIZE * a.aspect_ratio))]
             image = tf.image.resize_images(image, size=size, method=tf.image.ResizeMethod.BICUBIC)
 
         return tf.image.convert_image_dtype(image, dtype=tf.uint8, saturate=True)
 
     # reverse any processing on images so they can be written to disk or displayed to user
     with tf.name_scope("convert_inputs"):
-        converted_inputs = convert(inputs)
+        converted_inputs_L = convert(inputs[:,:,:,[0]],[128,128])
+        converted_inputs_R = convert(inputs[:,:,:,[1]],[128,128])
 
     with tf.name_scope("convert_targets"):
-        converted_targets = convert(targets)
+        converted_targets = convert(targets,[128,128])
 
     with tf.name_scope("convert_outputs"):
-        converted_outputs = convert(outputs)
+        converted_outputs = convert(outputs,[128,128])
 
     with tf.name_scope("encode_images"):
         display_fetches = {
             "paths": examples.paths,
-            "inputs": tf.map_fn(tf.image.encode_png, converted_inputs, dtype=tf.string, name="input_pngs"),
+            "inputsL": tf.map_fn(tf.image.encode_png, converted_inputs_L, dtype=tf.string, name="inputL_pngs"),
+            "inputsR": tf.map_fn(tf.image.encode_png, converted_inputs_R, dtype=tf.string, name="inputR_pngs"),
             "targets": tf.map_fn(tf.image.encode_png, converted_targets, dtype=tf.string, name="target_pngs"),
             "outputs": tf.map_fn(tf.image.encode_png, converted_outputs, dtype=tf.string, name="output_pngs"),
         }
 
     # summaries
     with tf.name_scope("inputs_summary"):
-        tf.summary.image("inputs", converted_inputs)
+        tf.summary.image("inputsL", converted_inputs_L)
+        tf.summary.image("inputsR", converted_inputs_R)
 
     with tf.name_scope("targets_summary"):
         tf.summary.image("targets", converted_targets)
