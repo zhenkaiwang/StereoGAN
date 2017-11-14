@@ -195,11 +195,11 @@ def load_examples():
         raw_input_L = tf.image.rgb_to_grayscale(raw_input_L)
         raw_input_R = tf.image.rgb_to_grayscale(raw_input_R)
         raw_input_depth = tf.image.convert_image_dtype(raw_input_depth, dtype=tf.float32)
-
-        if (len(raw_input_L.get_shape().as_list()) != 2):
-            raise Exception("len(raw_input_L.get_shape().as_list()) != 2")
+	print(raw_input_L.get_shape().as_list())
+        if (len(raw_input_L.get_shape().as_list()) != 3):
+            raise Exception("len(raw_input_L.get_shape().as_list()) != 3")
         
-        raw_input_LR = tf.concat([tf.expand_dims(t, 2) for t in [raw_input_L, raw_input_R]], 2)
+        raw_input_LR = tf.concat([raw_input_L, raw_input_R], 2)
 
         if (len(raw_input_LR.get_shape().as_list()) != 3):
             raise Exception("len(raw_input_L.get_shape().as_list()) != 3")
