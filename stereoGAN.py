@@ -634,7 +634,8 @@ def main():
         if a.checkpoint is not None:
             checkpoint = tf.train.latest_checkpoint(a.checkpoint)
             print("loading model from checkpoint: ", checkpoint)
-            saver.restore(sess, checkpoint)
+            if checkpoint is not None:
+                saver.restore(sess, checkpoint)
 
         max_steps = 2**32
         if a.max_epochs is not None:
