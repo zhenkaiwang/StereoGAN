@@ -36,7 +36,7 @@ parser.add_argument("--aspect_ratio", type=float, default=1.0, help="aspect rati
 parser.add_argument("--batch_size", type=int, default=16, help="number of images in batch") #set default batch size to be 16
 parser.add_argument("--ngf", type=int, default=64, help="number of generator filters in first conv layer")
 parser.add_argument("--ndf", type=int, default=64, help="number of discriminator filters in first conv layer")
-parser.add_argument("--scale_size", type=int, default=286, help="scale images to this size before cropping to 256x256")
+parser.add_argument("--scale_size", type=int, default=140, help="scale images to this size before cropping to 128x128")
 parser.add_argument("--flip", dest="flip", action="store_true", help="flip images horizontally")
 parser.add_argument("--no_flip", dest="flip", action="store_false", help="don't flip images horizontally")
 parser.set_defaults(flip=True)
@@ -50,7 +50,7 @@ parser.add_argument("--output_filetype", default="png", choices=["png", "jpeg","
 a = parser.parse_args()
 
 EPS = 1e-12
-CROP_SIZE = 256
+CROP_SIZE = 128
 
 Examples = collections.namedtuple("Examples", "paths, inputs, targets, count, steps_per_epoch")
 Model = collections.namedtuple("Model", "outputs, predict_real, predict_fake, discrim_loss, discrim_grads_and_vars, gen_loss_GAN, gen_loss_L1, gen_grads_and_vars, train")
@@ -140,10 +140,10 @@ def check_image(image):
 
 def load_examples():
     # TODO: Rewrite this part
-    # For inputs data: load all left and right image, convert into gray and resize into [number of image, 256, 256, 2], 
+    # For inputs data: load all left and right image, convert into gray and resize into [number of image, 128, 128, 2], 
     # with the first channel be left image , the second channnel be right image. Normalize into [0,1), using tf.image.convert_image_dtype.
     # Then preprocess it. Just as what it is done in the code. You can also crop the fish eye image if necessary.
-    # For targets data: Load the the depth data and resize into [number of image, 256, 256, 1]. 
+    # For targets data: Load the the depth data and resize into [number of image, 128, 128, 1]. 
     # Original depth data is pickle format, with each value in millimeter and dtype=uint16. 
     # Need to be convert to float32 and normalized into [0,1). The maximum detection range is 10000mm. So normalize the depth data with this value.
     # Then preprocess it. Just as what it is done in the code.
@@ -254,19 +254,18 @@ def create_generator(generator_inputs, generator_outputs_channels):
     # done
     layers = []
 
-    # encoder_1: [batch, 256, 256, in_channels=2] => [batch, 128, 128, ngf]
+    # encoder_1: [batch, 128, 128, in_channels=2] => [batch, 64, 64, ngf]
     with tf.variable_scope("encoder_1"):
         output = conv(generator_inputs, a.ngf, stride=2)
         layers.append(output)
 
     layer_specs = [
-        a.ngf * 2, # encoder_2: [batch, 128, 128, ngf] => [batch, 64, 64, ngf * 2]
-        a.ngf * 4, # encoder_3: [batch, 64, 64, ngf * 2] => [batch, 32, 32, ngf * 4]
-        a.ngf * 8, # encoder_4: [batch, 32, 32, ngf * 4] => [batch, 16, 16, ngf * 8]
-        a.ngf * 8, # encoder_5: [batch, 16, 16, ngf * 8] => [batch, 8, 8, ngf * 8]
-        a.ngf * 8, # encoder_6: [batch, 8, 8, ngf * 8] => [batch, 4, 4, ngf * 8]
-        a.ngf * 8, # encoder_7: [batch, 4, 4, ngf * 8] => [batch, 2, 2, ngf * 8]
-        a.ngf * 8, # encoder_8: [batch, 2, 2, ngf * 8] => [batch, 1, 1, ngf * 8]
+        a.ngf * 2, # encoder_2: [batch, 64, 64, ngf] => [batch, 32, 32, ngf * 2]
+        a.ngf * 4, # encoder_3: [batch, 32, 32, ngf * 2] => [batch, 16, 16, ngf * 4]
+        a.ngf * 8, # encoder_4: [batch, 16, 16, ngf * 4] => [batch, 8, 8, ngf * 8]
+        a.ngf * 8, # encoder_5: [batch, 8, 8, ngf * 8] => [batch, 4, 4, ngf * 8]
+        a.ngf * 8, # encoder_6: [batch, 4, 4, ngf * 8] => [batch, 2, 2, ngf * 8]
+        a.ngf * 8, # encoder_7: [batch, 2, 2, ngf * 8] => [batch, 1, 1, ngf * 8]
     ]
 
     for out_channels in layer_specs:
@@ -278,13 +277,12 @@ def create_generator(generator_inputs, generator_outputs_channels):
             layers.append(output)
 
     layer_specs = [
-        (a.ngf * 8, 0.5),   # decoder_8: [batch, 1, 1, ngf * 8] => [batch, 2, 2, ngf * 8 * 2]
-        (a.ngf * 8, 0.5),   # decoder_7: [batch, 2, 2, ngf * 8 * 2] => [batch, 4, 4, ngf * 8 * 2]
-        (a.ngf * 8, 0.5),   # decoder_6: [batch, 4, 4, ngf * 8 * 2] => [batch, 8, 8, ngf * 8 * 2]
-        (a.ngf * 8, 0.0),   # decoder_5: [batch, 8, 8, ngf * 8 * 2] => [batch, 16, 16, ngf * 8 * 2]
-        (a.ngf * 4, 0.0),   # decoder_4: [batch, 16, 16, ngf * 8 * 2] => [batch, 32, 32, ngf * 4 * 2]
-        (a.ngf * 2, 0.0),   # decoder_3: [batch, 32, 32, ngf * 4 * 2] => [batch, 64, 64, ngf * 2 * 2]
-        (a.ngf, 0.0),       # decoder_2: [batch, 64, 64, ngf * 2 * 2] => [batch, 128, 128, ngf * 2]
+        (a.ngf * 8, 0.5),   # decoder_7: [batch, 1, 1, ngf * 8 * 2] => [batch, 2, 2, ngf * 8 * 2]
+        (a.ngf * 8, 0.5),   # decoder_6: [batch, 2, 2, ngf * 8 * 2] => [batch, 4, 4, ngf * 8 * 2]
+        (a.ngf * 8, 0.0),   # decoder_5: [batch, 4, 4, ngf * 8 * 2] => [batch, 8, 8, ngf * 8 * 2]
+        (a.ngf * 4, 0.0),   # decoder_4: [batch, 8, 8, ngf * 8 * 2] => [batch, 16, 16, ngf * 4 * 2]
+        (a.ngf * 2, 0.0),   # decoder_3: [batch, 16, 16, ngf * 4 * 2] => [batch, 32, 32, ngf * 2 * 2]
+        (a.ngf, 0.0),       # decoder_2: [batch, 32, 32, ngf * 2 * 2] => [batch, 64, 64, ngf * 2]
     ]
 
     num_encoder_layers = len(layers)
@@ -308,7 +306,7 @@ def create_generator(generator_inputs, generator_outputs_channels):
 
             layers.append(output)
 
-    # decoder_1: [batch, 128, 128, ngf * 2] => [batch, 256, 256, generator_outputs_channels＝1]
+    # decoder_1: [batch, 64, 64, ngf * 2] => [batch, 128, 128, generator_outputs_channels＝1]
     with tf.variable_scope("decoder_1"):
         input = tf.concat([layers[-1], layers[0]], axis=3)
         rectified = tf.nn.relu(input)
@@ -328,15 +326,15 @@ def create_model(inputs, targets):
         # inputs: [batch, height, width, 2] & targets:[batch, height, width, 1]=> [batch, height, width, 3]
         input = tf.concat([discrim_inputs, discrim_targets], axis=3)
 
-        # layer_1: [batch, 256, 256, 3] => [batch, 128, 128, ndf]
+        # layer_1: [batch, 128, 128, 3] => [batch, 64, 64, ndf]
         with tf.variable_scope("layer_1"):
             convolved = conv(input, a.ndf, stride=2)
             rectified = lrelu(convolved, 0.2)
             layers.append(rectified)
 
-        # layer_2: [batch, 128, 128, ndf] => [batch, 64, 64, ndf * 2]
-        # layer_3: [batch, 64, 64, ndf * 2] => [batch, 32, 32, ndf * 4]
-        # layer_4: [batch, 32, 32, ndf * 4] => [batch, 31, 31, ndf * 8]
+        # layer_2: [batch, 64, 64, ndf] => [batch, 32, 32, ndf * 2]
+        # layer_3: [batch, 32, 32, ndf * 2] => [batch, 16, 16, ndf * 4]
+        # layer_4: [batch, 16, 16, ndf * 4] => [batch, 15, 15, ndf * 8]
         for i in range(n_layers):
             with tf.variable_scope("layer_%d" % (len(layers) + 1)):
                 out_channels = a.ndf * min(2**(i+1), 8)
@@ -346,7 +344,7 @@ def create_model(inputs, targets):
                 rectified = lrelu(normalized, 0.2)
                 layers.append(rectified)
 
-        # layer_5: [batch, 31, 31, ndf * 8] => [batch, 30, 30, 1]
+        # layer_5: [batch, 15, 15, ndf * 8] => [batch, 14, 14, 1]
         with tf.variable_scope("layer_%d" % (len(layers) + 1)):
             convolved = conv(rectified, out_channels=1, stride=1)
             output = tf.sigmoid(convolved)
@@ -362,12 +360,12 @@ def create_model(inputs, targets):
     # they share the same underlying variables
     with tf.name_scope("real_discriminator"):
         with tf.variable_scope("discriminator"):
-            # [batch, height, width, 2+1] => [batch, 30, 30, 1]
+            # [batch, height, width, 2+1] => [batch, 14, 14, 1]
             predict_real = create_discriminator(inputs, targets)
 
     with tf.name_scope("fake_discriminator"):
         with tf.variable_scope("discriminator", reuse=True):
-            # [batch, height, width, 2+1] => [batch, 30, 30, 1]
+            # [batch, height, width, 2+1] => [batch, 14, 14, 1]
             predict_fake = create_discriminator(inputs, outputs)
 
     with tf.name_scope("discriminator_loss"):
