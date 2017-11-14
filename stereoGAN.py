@@ -51,7 +51,7 @@ a = parser.parse_args()
 EPS = 1e-12
 CROP_SIZE = 128
 
-Examples = collections.namedtuple("Examples", "paths, inputs, targets, count, steps_per_epoch")
+Examples = collections.namedtuple("Examples", "pathsL, pathsR, pathsD, inputs, targets, count, steps_per_epoch")
 Model = collections.namedtuple("Model", "outputs, predict_real, predict_fake, discrim_loss, discrim_grads_and_vars, gen_loss_GAN, gen_loss_L1, gen_grads_and_vars, train")
 
 
@@ -195,7 +195,8 @@ def load_examples():
         raw_input_L = tf.image.rgb_to_grayscale(raw_input_L)
         raw_input_R = tf.image.rgb_to_grayscale(raw_input_R)
         raw_input_depth = tf.image.convert_image_dtype(raw_input_depth, dtype=tf.float32)
-	print(raw_input_L.get_shape().as_list())
+        print(raw_input_L.get_shape().as_list())
+        print(raw_input_depth.get_shape().as_list())
         if (len(raw_input_L.get_shape().as_list()) != 3):
             raise Exception("len(raw_input_L.get_shape().as_list()) != 3")
         
@@ -210,16 +211,19 @@ def load_examples():
 
         raw_input_LR.set_shape([None, None, 2]) #Set the image channels size to be 2
 
-        a_images = preprocess(raw_input_LR[:,:,:])
-        b_images = preprocess(raw_input_depth[:,:])
+        a_images = preprocess(raw_input_LR)
+        b_images = preprocess(raw_input_depth)
 
     inputs, targets = [a_images, b_images]
 
-    paths_batch, inputs_batch, targets_batch = tf.train.batch([paths, input_images, target_images], batch_size=a.batch_size)
+    paths_L_batch, paths_R_batch, paths_depth_batch, inputs_batch, targets_batch = 
+    		tf.train.batch([paths_L, paths_R, paths_depth, input_images, target_images], batch_size=a.batch_size)
     steps_per_epoch = int(math.ceil(len(input_L_paths) / a.batch_size))
 
     return Examples(
-        paths=paths_batch,
+        pathsL=paths_L_batch,
+        pathsR=paths_R_batch,
+        pathsD=paths_depth_batch,
         inputs=inputs_batch,
         targets=targets_batch,
         count=len(input_L_paths),
@@ -397,7 +401,7 @@ def save_images(fetches, step=None):
         os.makedirs(image_dir)
 
     filesets = []
-    for i, in_path in enumerate(fetches["paths"]):
+    for i, in_path in enumerate(fetches["pathsL"]):
         name, _ = os.path.splitext(os.path.basename(in_path.decode("utf8")))
         fileset = {"name": name, "step": step}
         for kind in ["inputsL","inputsR", "outputs", "targets"]:
@@ -560,7 +564,9 @@ def main():
 
     with tf.name_scope("encode_images"):
         display_fetches = {
-            "paths": examples.paths,
+            "pathsL": examples.pathsL,
+            "pathsR": examples.pathsR,
+            "pathsD": examples.pathsD,
             "inputsL": tf.map_fn(tf.image.encode_png, converted_inputs_L, dtype=tf.string, name="inputL_pngs"),
             "inputsR": tf.map_fn(tf.image.encode_png, converted_inputs_R, dtype=tf.string, name="inputR_pngs"),
             "targets": tf.map_fn(tf.image.encode_png, converted_targets, dtype=tf.string, name="target_pngs"),
