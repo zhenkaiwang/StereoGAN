@@ -414,7 +414,6 @@ def save_images(fetches, step=None):
         fileset = {"name": name, "step": step}
         for kind in ["inputsL","inputsR", "outputs", "targets"]:
             filename = name + "-" + kind + ".png"
-            print("saving file: ", filename)
             if step is not None:
                 filename = "%08d-%s" % (step, filename)
             fileset[kind] = filename
