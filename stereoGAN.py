@@ -529,9 +529,9 @@ def main():
 
         with tf.Session() as sess:
             sess.run(init_op)
-            # print("loading model from checkpoint")
-            # checkpoint = tf.train.latest_checkpoint(a.checkpoint)
-            # restore_saver.restore(sess, checkpoint)
+            print("loading model from checkpoint")
+            checkpoint = tf.train.latest_checkpoint(a.checkpoint)
+            restore_saver.restore(sess, checkpoint)
             print("exporting model")
             export_saver.export_meta_graph(filename=os.path.join(a.output_dir, "export.meta"))
             export_saver.save(sess, os.path.join(a.output_dir, "export"), write_meta_graph=True)
@@ -632,8 +632,8 @@ def main():
         print("parameter_count =", sess.run(parameter_count))
 
         if a.checkpoint is not None:
-            print("loading model from checkpoint")
             checkpoint = tf.train.latest_checkpoint(a.checkpoint)
+            print("loading model from checkpoint: ", checkpoint)
             saver.restore(sess, checkpoint)
 
         max_steps = 2**32
