@@ -20,15 +20,15 @@ parser.add_argument("--input_dir", default="/cvgl2/u/hirose/dataset_depth/", hel
 parser.add_argument("--depth_dir", default="/cvgl2/u/hhlics/dataset_depth/", help="path to folder containing images")# done: set default path to the dataset
 parser.add_argument("--mode", required=True, choices=["train", "test", "export"])
 parser.add_argument("--output_dir", default= "outputs",required=True, help="where to put output files") # done: set default path for the output directory
-parser.add_argument("--checkpoint", default=None, help="directory with checkpoint to resume training from or use for testing") # done: set default path for the checkpoint directory
+parser.add_argument("--checkpoint", default="ckpt", help="directory with checkpoint to resume training from or use for testing") # done: set default path for the checkpoint directory
 parser.add_argument("--seed", type=int)
 
 parser.add_argument("--max_steps", type=int,help="number of training steps (0 to disable)")
-parser.add_argument("--max_epochs", type=int, default=20, help="number of training epochs")
+parser.add_argument("--max_epochs", type=int, default=200, help="number of training epochs")
 parser.add_argument("--summary_freq", type=int, default=100, help="update summaries every summary_freq steps")
 parser.add_argument("--progress_freq", type=int, default=50, help="display progress every progress_freq steps")
 parser.add_argument("--trace_freq", type=int, default=0, help="trace execution every trace_freq steps")
-parser.add_argument("--display_freq", type=int, default=0, help="write current training images every display_freq steps")
+parser.add_argument("--display_freq", type=int, default=10, help="write current training images every display_freq steps")
 parser.add_argument("--save_freq", type=int, default=5000, help="save model every save_freq steps, 0 to disable")
 
 parser.add_argument("--aspect_ratio", type=float, default=1.0, help="aspect ratio of output images (width/height)")
@@ -538,8 +538,8 @@ def main():
             checkpoint = tf.train.latest_checkpoint(a.checkpoint)
             restore_saver.restore(sess, checkpoint)
             print("exporting model")
-            export_saver.export_meta_graph(filename=os.path.join(a.output_dir, "export.meta"))
-            export_saver.save(sess, os.path.join(a.output_dir, "export"), write_meta_graph=True)
+            export_saver.export_meta_graph(filename=os.path.join(a.checkpoint, "export.meta"))
+            export_saver.save(sess, os.path.join(a.checkpoint, "export"), write_meta_graph=True)
 
         return
 
@@ -666,7 +666,7 @@ def main():
             print("enter training mode, max_steps: ", max_steps)
 
             for step in range(max_steps):
-                print('step: ', step)
+                # print('step: ', step)
                 def should(freq):
                     return freq > 0 and ((step + 1) % freq == 0 or step == max_steps - 1)
 
@@ -714,13 +714,14 @@ def main():
                     rate = (step + 1) * a.batch_size / (time.time() - start)
                     remaining = (max_steps - step) * a.batch_size / rate
                     print("progress  epoch %d  step %d  image/sec %0.1f  remaining %dm" % (train_epoch, train_step, rate, remaining / 60))
-                    print("discrim_loss", results["discrim_loss"])
-                    print("gen_loss_GAN", results["gen_loss_GAN"])
-                    print("gen_loss_L1", results["gen_loss_L1"])
+                    print("discrim_loss ", results["discrim_loss"])
+                    print("gen_loss_GAN ", results["gen_loss_GAN"])
+                    print("gen_loss_L1 ", results["gen_loss_L1"])
+                    print("gen_loss ",esults["gen_loss_GAN"] * a.gan_weight + results["gen_loss_L1"] * a.l1_weight)
 
                 if should(a.save_freq):
                     print("saving model")
-                    saver.save(sess, os.path.join(a.output_dir, "model"), global_step=sv.global_step)
+                    saver.save(sess, os.path.join(a.checkpoint, "model"), global_step=sv.global_step)
 
                 if sv.should_stop():
                     break
