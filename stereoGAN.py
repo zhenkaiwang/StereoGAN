@@ -167,9 +167,11 @@ def load_examples():
 
     # if the image names are numbers, sort by the value rather than asciibetically
     # having sorted inputs means that the outputs are sorted in test mode
-    if all(get_name(path).isdigit() for path in input_paths):
+    if all(get_name(path).isdigit() for path in input_L_paths):
         input_L_paths = sorted(input_L_paths, key=lambda path: int(get_name(path)))
+    if all(get_name(path).isdigit() for path in input_R_paths):
         input_R_paths = sorted(input_R_paths, key=lambda path: int(get_name(path)))
+    if all(get_name(path).isdigit() for path in depth_paths):
         depth_paths = sorted(depth_paths, key=lambda path: int(get_name(path)))
     else:
         input_L_paths = sorted(input_L_paths)
@@ -214,13 +216,13 @@ def load_examples():
     inputs, targets = [a_images, b_images]
 
     paths_batch, inputs_batch, targets_batch = tf.train.batch([paths, input_images, target_images], batch_size=a.batch_size)
-    steps_per_epoch = int(math.ceil(len(input_paths) / a.batch_size))
+    steps_per_epoch = int(math.ceil(len(input_L_paths) / a.batch_size))
 
     return Examples(
         paths=paths_batch,
         inputs=inputs_batch,
         targets=targets_batch,
-        count=len(input_paths),
+        count=len(input_L_paths),
         steps_per_epoch=steps_per_epoch,
     )
 
