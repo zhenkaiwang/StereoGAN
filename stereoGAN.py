@@ -558,7 +558,7 @@ def main():
         # if a.aspect_ratio != 1.0:
             # # upscale to correct aspect ratio
             # size = [CROP_SIZE, int(round(CROP_SIZE * a.aspect_ratio))]
-            image = tf.image.resize_images(image, size=size, method=tf.image.ResizeMethod.BICUBIC)
+        image = tf.image.resize_images(image, size=size, method=tf.image.ResizeMethod.BICUBIC)
 
         return tf.image.convert_image_dtype(image, dtype=tf.uint8, saturate=True)
 
