@@ -460,7 +460,7 @@ def main():
     if not os.path.exists(a.output_dir):
         os.makedirs(a.output_dir)
 
-    if a.mode == "test" or a.mode == "export":
+    if a.mode == "test":
         if a.checkpoint is None:
             raise Exception("checkpoint required for test mode")
 
