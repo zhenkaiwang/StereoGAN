@@ -28,7 +28,7 @@ parser.add_argument("--max_epochs", type=int, default=200, help="number of train
 parser.add_argument("--summary_freq", type=int, default=100, help="update summaries every summary_freq steps")
 parser.add_argument("--progress_freq", type=int, default=50, help="display progress every progress_freq steps")
 parser.add_argument("--trace_freq", type=int, default=0, help="trace execution every trace_freq steps")
-parser.add_argument("--display_freq", type=int, default=10, help="write current training images every display_freq steps")
+parser.add_argument("--display_freq", type=int, default=1000, help="write current training images every display_freq steps")
 parser.add_argument("--save_freq", type=int, default=5000, help="save model every save_freq steps, 0 to disable")
 
 parser.add_argument("--aspect_ratio", type=float, default=1.0, help="aspect ratio of output images (width/height)")
@@ -717,7 +717,7 @@ def main():
                     print("discrim_loss ", results["discrim_loss"])
                     print("gen_loss_GAN ", results["gen_loss_GAN"])
                     print("gen_loss_L1 ", results["gen_loss_L1"])
-                    print("gen_loss ",esults["gen_loss_GAN"] * a.gan_weight + results["gen_loss_L1"] * a.l1_weight)
+                    print("gen_loss ",results["gen_loss_GAN"] * a.gan_weight + results["gen_loss_L1"] * a.l1_weight)
 
                 if should(a.save_freq):
                     print("saving model")
