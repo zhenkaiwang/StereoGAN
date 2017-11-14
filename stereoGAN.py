@@ -489,13 +489,14 @@ def main():
         input_data = tf.decode_base64(input[0])
         input_image = tf.image.decode_png(input_data)
 
-        # # remove alpha channel if present
-        # input_image = tf.cond(tf.equal(tf.shape(input_image)[2], 4), lambda: input_image[:,:,:3], lambda: input_image)
-        # # convert grayscale to RGB
-        # input_image = tf.cond(tf.equal(tf.shape(input_image)[2], 1), lambda: tf.image.grayscale_to_rgb(input_image), lambda: input_image)
+        # remove alpha channel if present
+        input_image = tf.cond(tf.equal(tf.shape(input_image)[2], 4), lambda: input_image[:,:,:3], lambda: input_image)
+        # convert RGB to grayscale
+        input_image = tf.cond(tf.equal(tf.shape(input_image)[2], 3), lambda: tf.image.rgb_to_grayscale(input_image), lambda: input_image)
 
         input_image = tf.image.convert_image_dtype(input_image, dtype=tf.float32)
         input_image.set_shape([CROP_SIZE, CROP_SIZE, 1])
+        input_image=tf.concat([input_image,input_image],axis=2)
         batch_input = tf.expand_dims(input_image, axis=0)
 
         with tf.variable_scope("generator"):
@@ -533,7 +534,7 @@ def main():
             restore_saver.restore(sess, checkpoint)
             print("exporting model")
             export_saver.export_meta_graph(filename=os.path.join(a.output_dir, "export.meta"))
-            export_saver.save(sess, os.path.join(a.output_dir, "export"), write_meta_graph=False)
+            export_saver.save(sess, os.path.join(a.output_dir, "export"), write_meta_graph=True)
 
         return
 
