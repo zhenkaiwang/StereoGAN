@@ -559,14 +559,18 @@ def main():
     print('target shape: ', targets.get_shape().as_list())
     print('output shape: ', outputs.get_shape().as_list())
     with tf.name_scope("convert_inputs"):
-        converted_inputs_L = convert(inputs[:,:,:,[0]],size=(128,128))
-        converted_inputs_R = convert(inputs[:,:,:,[1]],size=(128,128))
+        converted_inputs_L = convert(inputs[:,:,:,0],size=(128,128))
+        converted_inputs_R = convert(inputs[:,:,:,1],size=(128,128))
 
     with tf.name_scope("convert_targets"):
         converted_targets = convert(targets,size=(128,128))
 
     with tf.name_scope("convert_outputs"):
         converted_outputs = convert(outputs,size=(128,128))
+
+    print('converted input shape: ', converted_inputs_L.get_shape().as_list())
+    print('converted target shape: ', converted_targets.get_shape().as_list())
+    print('converted output shape: ', converted_outputs.get_shape().as_list())
 
     with tf.name_scope("encode_images"):
         display_fetches = {
