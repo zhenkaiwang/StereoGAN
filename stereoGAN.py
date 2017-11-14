@@ -192,6 +192,8 @@ def load_examples():
         raw_input_depth = decode(contents_depth)
         raw_input_L = tf.image.convert_image_dtype(raw_input_L, dtype=tf.float32)
         raw_input_R = tf.image.convert_image_dtype(raw_input_R, dtype=tf.float32)
+        raw_input_L = tf.image.rgb_to_grayscale(raw_input_L)
+        raw_input_R = tf.image.rgb_to_grayscale(raw_input_R)
         raw_input_depth = tf.image.convert_image_dtype(raw_input_depth, dtype=tf.float32)
 
         if (len(raw_input_L.get_shape().as_list()) != 2):
