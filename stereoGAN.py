@@ -574,14 +574,23 @@ def main():
     print('converted output shape: ', converted_outputs.get_shape().as_list())
 
     with tf.name_scope("encode_images"):
+        # display_fetches = {
+        #     "pathsL": examples.pathsL,
+        #     "pathsR": examples.pathsR,
+        #     "pathsD": examples.pathsD,
+        #     "inputsL": tf.map_fn(tf.image.encode_png, converted_inputs_L, dtype=tf.string, name="inputL_pngs"),
+        #     "inputsR": tf.map_fn(tf.image.encode_png, converted_inputs_R, dtype=tf.string, name="inputR_pngs"),
+        #     "targets": tf.map_fn(tf.image.encode_png, converted_targets, dtype=tf.string, name="target_pngs"),
+        #     "outputs": tf.map_fn(tf.image.encode_png, converted_outputs, dtype=tf.string, name="output_pngs"),
+        # }
         display_fetches = {
             "pathsL": examples.pathsL,
             "pathsR": examples.pathsR,
             "pathsD": examples.pathsD,
-            "inputsL": tf.map_fn(tf.image.encode_png, converted_inputs_L, dtype=tf.string, name="inputL_pngs"),
-            "inputsR": tf.map_fn(tf.image.encode_png, converted_inputs_R, dtype=tf.string, name="inputR_pngs"),
-            "targets": tf.map_fn(tf.image.encode_png, converted_targets, dtype=tf.string, name="target_pngs"),
-            "outputs": tf.map_fn(tf.image.encode_png, converted_outputs, dtype=tf.string, name="output_pngs"),
+            "inputsL": converted_inputs_L,
+            "inputsR": converted_inputs_R,
+            "targets": converted_targets,
+            "outputs": converted_outputs,
         }
 
     # summaries
