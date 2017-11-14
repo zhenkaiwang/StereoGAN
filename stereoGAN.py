@@ -186,9 +186,9 @@ def load_examples():
         paths_L, contents_L = reader.read(path_L_queue)
         paths_R, contents_R = reader.read(path_R_queue)
         paths_depth, contents_depth = reader.read(depth_queue)
-        paths_L.set_shape([1])
-        paths_R.set_shape([1]) 
-        paths_depth.set_shape([1]) 
+        paths_L.set_shape([])
+        paths_R.set_shape([]) 
+        paths_depth.set_shape([]) 
 
         raw_input_L = decode(contents_L)
         raw_input_R = decode(contents_R)
@@ -213,6 +213,7 @@ def load_examples():
             raw_input_LR = tf.identity(raw_input_LR)
 
         raw_input_LR.set_shape([None, None, 2]) #Set the image channels size to be 2
+        raw_input_depth.set_shape([None, None, 1]) 
 
         a_images = preprocess(raw_input_LR)
         b_images = preprocess(raw_input_depth)
