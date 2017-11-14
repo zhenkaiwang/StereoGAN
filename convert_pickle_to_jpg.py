@@ -14,6 +14,7 @@ def convert_depth_file(pickle_path, jpg_path):
             np_arr[np_arr == 0] = 1e4
             np_arr = np_arr.astype(np.float32) / 1e4 * 255
             im = Image.fromarray(np.floor(np_arr))
+            im = im.transpose(Image.FLIP_LEFT_RIGHT)
             im = im.resize((256,256), Image.ANTIALIAS)
             if im.mode != 'RGB':
                     im = im.convert('RGB')
