@@ -217,10 +217,9 @@ def load_examples():
         a_images = preprocess(raw_input_LR)
         b_images = preprocess(raw_input_depth)
 
-    inputs, targets = [a_images, b_images]
+    input_images, target_images = [a_images, b_images]
 
-    paths_L_batch, paths_R_batch, paths_depth_batch, inputs_batch, targets_batch = 
-    		tf.train.batch([paths_L, paths_R, paths_depth, input_images, target_images], batch_size=a.batch_size)
+    paths_L_batch, paths_R_batch, paths_depth_batch, inputs_batch, targets_batch = tf.train.batch([paths_L, paths_R, paths_depth, input_images, target_images], batch_size=a.batch_size)
     steps_per_epoch = int(math.ceil(len(input_L_paths) / a.batch_size))
 
     return Examples(
