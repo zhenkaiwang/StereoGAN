@@ -6,15 +6,18 @@ import tensorflow as tf
 import numpy as np
 import argparse
 import os
+import pickle
 import json
 import glob
 import random
 import collections
 import math
 import time
+from PIL import Image
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--input_dir", default="/cvgl2/hirose/dataset_depth", help="path to folder containing images")# done: set default path to the dataset
+parser.add_argument("--input_dir", default="/cvgl2/u/hirose/dataset_depth/", help="path to folder containing images")# done: set default path to the dataset
+parser.add_argument("--depth_dir", default="/cvgl2/u/hhlics/dataset_depth/", help="path to folder containing images")# done: set default path to the dataset
 parser.add_argument("--mode", required=True, choices=["train", "test", "export"])
 parser.add_argument("--output_dir", default= "outputs",required=True, help="where to put output files") # done: set default path for the output directory
 parser.add_argument("--seed", type=int)
@@ -135,10 +138,9 @@ def check_image(image):
     image.set_shape(shape)
     return image
 
-
 def load_examples():
-    # to do: Rewrite this part
-    # For inputs data:load all left and right image, convert into gray and resize into [number of image, 256, 256, 2], 
+    # TODO: Rewrite this part
+    # For inputs data: load all left and right image, convert into gray and resize into [number of image, 256, 256, 2], 
     # with the first channel be left image , the second channnel be right image. Normalize into [0,1), using tf.image.convert_image_dtype.
     # Then preprocess it. Just as what it is done in the code. You can also crop the fish eye image if necessary.
     # For targets data: Load the the depth data and resize into [number of image, 256, 256, 1]. 
@@ -148,14 +150,18 @@ def load_examples():
     if a.input_dir is None or not os.path.exists(a.input_dir):
         raise Exception("input_dir does not exist")
 
-    input_paths = glob.glob(os.path.join(a.input_dir, "*.jpg"))
+    convert_depth_file(a.input_dir + "/depth/", a.depth_dir + "/depth/")
+    input_L_paths = glob.glob(os.path.join(a.input_dir + "/img_L_1/", "*.jpg"))
+    input_R_paths = glob.glob(os.path.join(a.input_dir + "/img_R_1/", "*.jpg"))
+    depth_paths = glob.glob(os.path.join(a.depth_dir + "/depth_1/", "*.jpg"))
     decode = tf.image.decode_jpeg
-    if len(input_paths) == 0:
-        input_paths = glob.glob(os.path.join(a.input_dir, "*.png"))
-        decode = tf.image.decode_png
 
-    if len(input_paths) == 0:
-        raise Exception("input_dir contains no image files")
+    if len(input_L_paths) == 0:
+        raise Exception(a.input_dir + "/img_L/" + " contains no image files")
+    if len(input_R_paths) == 0:
+        raise Exception(a.input_dir + "/img_R/" + " contains no image files")
+    if len(depth_paths) == 0:
+        raise Exception(a.input_dir + "/depth_1/" + " contains no depth files")
 
     def get_name(path):
         name, _ = os.path.splitext(os.path.basename(path))
@@ -164,34 +170,48 @@ def load_examples():
     # if the image names are numbers, sort by the value rather than asciibetically
     # having sorted inputs means that the outputs are sorted in test mode
     if all(get_name(path).isdigit() for path in input_paths):
-        input_paths = sorted(input_paths, key=lambda path: int(get_name(path)))
+        input_L_paths = sorted(input_L_paths, key=lambda path: int(get_name(path)))
+        input_R_paths = sorted(input_R_paths, key=lambda path: int(get_name(path)))
+        depth_paths = sorted(depth_paths, key=lambda path: int(get_name(path)))
     else:
-        input_paths = sorted(input_paths)
+        input_L_paths = sorted(input_L_paths)
+        input_R_paths = sorted(input_R_paths)
+        depth_paths = sorted(depth_paths)
 
     with tf.name_scope("load_images"):
-        path_queue = tf.train.string_input_producer(input_paths, shuffle=a.mode == "train")
+        path_L_queue = tf.train.string_input_producer(input_L_paths, shuffle=False)#a.mode == "train")
+        path_R_queue = tf.train.string_input_producer(input_R_paths, shuffle=False)#a.mode == "train")
+        depth_queue = tf.train.string_input_producer(depth_paths, shuffle=False)#a.mode == "train")
         reader = tf.WholeFileReader()
-        paths, contents = reader.read(path_queue)
-        raw_input = decode(contents)
-        raw_input = tf.image.convert_image_dtype(raw_input, dtype=tf.float32)
+        paths_L, contents_L = reader.read(path_L_queue)
+        paths_R, contents_R = reader.read(path_R_queue)
+        paths_depth, contents_depth = reader.read(depth_queue)
 
-        assertion = tf.assert_equal(tf.shape(raw_input)[2], 2, message="image does not have 2 channels") # check the image data has 2 channels
+        raw_input_L = decode(contents_L)
+        raw_input_R = decode(contents_R)
+        raw_input_depth = decode(contents_depth)
+        raw_input_L = tf.image.convert_image_dtype(raw_input_L, dtype=tf.float32)
+        raw_input_R = tf.image.convert_image_dtype(raw_input_R, dtype=tf.float32)
+        raw_input_depth = tf.image.convert_image_dtype(raw_input_depth, dtype=tf.float32)
+
+        if (len(raw_input_L.get_shape().as_list()) != 2):
+            raise Exception("len(raw_input_L.get_shape().as_list()) != 2")
+        
+        raw_input_LR = tf.concat([tf.expand_dims(t, 2) for t in [raw_input_L, raw_input_R]], 2)
+
+        if (len(raw_input_LR.get_shape().as_list()) != 3):
+            raise Exception("len(raw_input_L.get_shape().as_list()) != 3")
+        
+        assertion = tf.assert_equal(tf.shape(raw_input_LR)[2], 2, message="image does not have 2 channels") # check the image data has 2 channels
         with tf.control_dependencies([assertion]):
-            raw_input = tf.identity(raw_input)
+            raw_input_LR = tf.identity(raw_input_LR)
 
-        raw_input.set_shape([None, None, 2]) #Set the image channels size to be 2
+        raw_input_LR.set_shape([None, None, 2]) #Set the image channels size to be 2
 
-        # break apart image pair and move to range [-1, 1]
-        width = tf.shape(raw_input)[1] # [height, width, channels]
-        a_images = preprocess(raw_input[:,:width//2,:])
-        b_images = preprocess(raw_input[:,width//2:,:])
+        a_images = preprocess(raw_input_LR[:,:,:])
+        b_images = preprocess(raw_input_depth[:,:])
 
-    if a.which_direction == "AtoB":
-        inputs, targets = [a_images, b_images]
-    elif a.which_direction == "BtoA":
-        inputs, targets = [b_images, a_images]
-    else:
-        raise Exception("invalid direction")
+    inputs, targets = [a_images, b_images]
 
     # synchronize seed for image operations so that we do the same operations to both
     # input and output images
