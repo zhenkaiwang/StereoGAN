@@ -186,6 +186,9 @@ def load_examples():
         paths_L, contents_L = reader.read(path_L_queue)
         paths_R, contents_R = reader.read(path_R_queue)
         paths_depth, contents_depth = reader.read(depth_queue)
+        paths_L.set_shape([1])
+        paths_R.set_shape([1]) 
+        paths_depth.set_shape([1]) 
 
         raw_input_L = decode(contents_L)
         raw_input_R = decode(contents_R)
