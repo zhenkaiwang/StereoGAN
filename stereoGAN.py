@@ -665,6 +665,7 @@ def main():
 
                 options = None
                 run_metadata = None
+                print('step: ', step)
                 if should(a.trace_freq):
                     options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                     run_metadata = tf.RunMetadata()
