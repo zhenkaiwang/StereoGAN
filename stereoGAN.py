@@ -20,7 +20,7 @@ parser.add_argument("--input_dir", default="/cvgl2/u/hirose/dataset_depth/", hel
 parser.add_argument("--depth_dir", default="/cvgl2/u/hhlics/dataset_depth/", help="path to folder containing images")# done: set default path to the dataset
 parser.add_argument("--mode", required=True, choices=["train", "test", "export"])
 parser.add_argument("--output_dir", default= "outputs",required=True, help="where to put output files") # done: set default path for the output directory
-parser.add_argument("--checkpoint", default="ckpt", help="directory with checkpoint to resume training from or use for testing") # done: set default path for the checkpoint directory
+parser.add_argument("--checkpoint", default=None, help="directory with checkpoint to resume training from or use for testing") # done: set default path for the checkpoint directory
 parser.add_argument("--seed", type=int)
 
 parser.add_argument("--max_steps", type=int, help="number of training steps (0 to disable)")
@@ -240,6 +240,8 @@ def create_generator(generator_inputs, generator_outputs_channels):
 
     # encoder_1: [batch, 128, 128, in_channels=2] => [batch, 64, 64, ngf]
     assertion = tf.assert_equal(tf.shape(generator_inputs)[2], 2, message="image does not have 2 channels")
+    with tf.control_dependencies([assertion]):
+            generator_inputs = tf.identity(generator_inputs)
     with tf.variable_scope("encoder_1"):
         output = conv(generator_inputs, a.ngf, stride=2)
         layers.append(output)
@@ -411,6 +413,7 @@ def save_images(fetches, step=None):
         fileset = {"name": name, "step": step}
         for kind in ["inputsL","inputsR", "outputs", "targets"]:
             filename = name + "-" + kind + ".png"
+            print("saving file: ", filename)
             if step is not None:
                 filename = "%08d-%s" % (step, filename)
             fileset[kind] = filename
@@ -597,14 +600,14 @@ def main():
 
     # summaries
     with tf.name_scope("inputs_summary"):
-        tf.summary.image("inputsL", converted_inputs_L)
-        tf.summary.image("inputsR", converted_inputs_R)
+        tf.summary.image("inputsL", tf.image.convert_image_dtype(converted_inputs_L,dtype=tf.uint8))
+        tf.summary.image("inputsR", tf.image.convert_image_dtype(converted_inputs_R,dtype=tf.uint8))
 
     with tf.name_scope("targets_summary"):
-        tf.summary.image("targets", converted_targets)
+        tf.summary.image("targets", tf.image.convert_image_dtype(converted_targets,dtype=tf.uint8))
 
     with tf.name_scope("outputs_summary"):
-        tf.summary.image("outputs", converted_outputs)
+        tf.summary.image("outputs", tf.image.convert_image_dtype(converted_outputs,dtype=tf.uint8))
 
     with tf.name_scope("predict_real_summary"):
         tf.summary.image("predict_real", tf.image.convert_image_dtype(model.predict_real, dtype=tf.uint8))
