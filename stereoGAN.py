@@ -550,20 +550,23 @@ def main():
         if a.aspect_ratio != 1.0:
             # # upscale to correct aspect ratio
             # size = [CROP_SIZE, int(round(CROP_SIZE * a.aspect_ratio))]
-            image = tf.image.resize_images(image, size=size, method=tf.image.ResizeMethod.BICUBIC)
+            # image = tf.image.resize_images(image, size=size, method=tf.image.ResizeMethod.BICUBIC)
 
         return tf.image.convert_image_dtype(image, dtype=tf.uint8, saturate=True)
 
     # reverse any processing on images so they can be written to disk or displayed to user
+    print('input shape: ', inputs.get_shape().as_list())
+    print('target shape: ', targets.get_shape().as_list())
+    print('output shape: ', outputs.get_shape().as_list())
     with tf.name_scope("convert_inputs"):
-        converted_inputs_L = convert(inputs[:,:,:,[0]],[128,128])
-        converted_inputs_R = convert(inputs[:,:,:,[1]],[128,128])
+        converted_inputs_L = convert(inputs[:,:,:,[0]],size=(128,128))
+        converted_inputs_R = convert(inputs[:,:,:,[1]],size=(128,128))
 
     with tf.name_scope("convert_targets"):
-        converted_targets = convert(targets,[128,128])
+        converted_targets = convert(targets,size=(128,128))
 
     with tf.name_scope("convert_outputs"):
-        converted_outputs = convert(outputs,[128,128])
+        converted_outputs = convert(outputs,size=(128,128))
 
     with tf.name_scope("encode_images"):
         display_fetches = {
