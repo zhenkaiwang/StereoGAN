@@ -177,6 +177,8 @@ def load_examples():
         input_L_paths = sorted(input_L_paths)
         input_R_paths = sorted(input_R_paths)
         depth_paths = sorted(depth_paths)
+    for i in range(len(input_L_paths)):
+        print('path '+ str(i) + ': ' + input_L_paths[i]+'\n'+input_R_paths[i]+'\n'+depth_paths[i]+'\n')
 
     with tf.name_scope("load_images"):
         path_L_queue = tf.train.string_input_producer(input_L_paths, shuffle=True, seed=42)#a.mode == "train")
