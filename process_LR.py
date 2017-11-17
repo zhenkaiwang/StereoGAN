@@ -15,5 +15,5 @@ def process_LR(source_path, target_path):
             im.save(target_path + img_filename)
 
 if __name__ == "__main__":
-        process_LR("/cvgl2/u/hirose/dataset_depth/img_L_1/", "/cvgl2/u/hhlics/dataset_depth/img_L_1/")
-        process_LR("/cvgl2/u/hirose/dataset_depth/img_R_1/", "/cvgl2/u/hhlics/dataset_depth/img_R_1/")
+        process_LR("/cvgl2/u/hirose/dataset_depth/img_L_1rev/", "/cvgl/u/zackwang/dataset_depth/img_L_1test/")
+        process_LR("/cvgl2/u/hirose/dataset_depth/img_R_1rev/", "/cvgl/u/zackwang/dataset_depth/img_R_1test/")

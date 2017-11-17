@@ -18,7 +18,7 @@ def convert_depth_file(pickle_path, jpg_path):
             im = im.resize((128,128), Image.ANTIALIAS)
             if im.mode != 'RGB':
                     im = im.convert('RGB')
-            im.save(jpg_path + pickle_filename.replace(".pickle", "_D.jpg").replace("depth_train1", "img_train1"))
+            im.save(jpg_path + pickle_filename.replace(".pickle", "_D.jpg").replace("depth_1", "img_1"))
 
 if __name__ == "__main__":
-        convert_depth_file("/cvgl2/u/hirose/dataset_depth/depth_1/", "/cvgl2/u/hhlics/dataset_depth/depth_1/")
+        convert_depth_file("/cvgl2/u/hirose/dataset_depth/depth_1rev/", "/cvgl/u/zackwang/dataset_depth/depth_1test/")
