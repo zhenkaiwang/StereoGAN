@@ -18,6 +18,7 @@ from PIL import Image
 parser = argparse.ArgumentParser()
 parser.add_argument("--input_dir", default="/cvgl2/u/hhlics/dataset_depth/", help="path to folder containing images")# done: set default path to the dataset
 parser.add_argument("--depth_dir", default="/cvgl2/u/hhlics/dataset_depth/", help="path to folder containing images")# done: set default path to the dataset
+parser.add_argument("--test_image_dir",default="/cvgl/u/zackwang/dataset_depth", help="path to folder containing test images")
 parser.add_argument("--mode", required=True, choices=["train", "test", "export"])
 parser.add_argument("--output_dir", default= "outputs",required=True, help="where to put output files") # done: set default path for the output directory
 parser.add_argument("--checkpoint", default="ckpt", help="directory with checkpoint to resume training from or use for testing") # done: set default path for the checkpoint directory
@@ -146,20 +147,36 @@ def load_examples():
     # Original depth data is pickle format, with each value in millimeter and dtype=uint16. 
     # Need to be convert to float32 and normalized into [0,1). The maximum detection range is 10000mm. So normalize the depth data with this value.
     # Then preprocess it. Just as what it is done in the code.
-    if a.input_dir is None or not os.path.exists(a.input_dir):
-        raise Exception("input_dir does not exist")
+    if a.mode == 'test':
+        if a.test_image_dir is None or not os.path.exists(a.test_image_dir):
+            raise Exception("test_image_dir does not exist")
 
-    input_L_paths = glob.glob(os.path.join(a.input_dir + "/img_L_1/", "*.jpg"))
-    input_R_paths = glob.glob(os.path.join(a.input_dir + "/img_R_1/", "*.jpg"))
-    depth_paths = glob.glob(os.path.join(a.depth_dir + "/depth_1/", "*.jpg"))
-    decode = tf.image.decode_jpeg
+        input_L_paths = glob.glob(os.path.join(a.test_image_dir + "/img_L_1test/", "*.jpg"))
+        input_R_paths = glob.glob(os.path.join(a.test_image_dir + "/img_R_1test/", "*.jpg"))
+        depth_paths = glob.glob(os.path.join(a.test_image_dir + "/depth_1test/", "*.jpg"))
+        decode = tf.image.decode_jpeg
 
-    if len(input_L_paths) == 0:
-        raise Exception(a.input_dir + "/img_L/" + " contains no image files")
-    if len(input_R_paths) == 0:
-        raise Exception(a.input_dir + "/img_R/" + " contains no image files")
-    if len(depth_paths) == 0:
-        raise Exception(a.depth_dir + "/depth_1/" + " contains no depth files")
+        if len(input_L_paths) == 0:
+            raise Exception(a.test_image_dir + "/img_L_1test/" + " contains no image files")
+        if len(input_R_paths) == 0:
+            raise Exception(a.test_image_dir + "/img_R_1test/" + " contains no image files")
+        if len(depth_paths) == 0:
+            raise Exception(a.test_image_dir + "/depth_1test/" + " contains no depth files")
+    else:
+        if a.input_dir is None or not os.path.exists(a.input_dir):
+            raise Exception("input_dir does not exist")
+
+        input_L_paths = glob.glob(os.path.join(a.input_dir + "/img_L_1/", "*.jpg"))
+        input_R_paths = glob.glob(os.path.join(a.input_dir + "/img_R_1/", "*.jpg"))
+        depth_paths = glob.glob(os.path.join(a.depth_dir + "/depth_1/", "*.jpg"))
+        decode = tf.image.decode_jpeg
+
+        if len(input_L_paths) == 0:
+            raise Exception(a.input_dir + "/img_L/" + " contains no image files")
+        if len(input_R_paths) == 0:
+            raise Exception(a.input_dir + "/img_R/" + " contains no image files")
+        if len(depth_paths) == 0:
+            raise Exception(a.depth_dir + "/depth_1/" + " contains no depth files")
 
     def get_name(path):
         name, _ = os.path.splitext(os.path.basename(path))
@@ -408,7 +425,10 @@ def create_model(inputs, targets):
 def save_images(fetches, step=None):
     # to do: 
     # Resize both the target and output data into original size and save as png file.
-    image_dir = os.path.join(a.output_dir, "images")
+    if a.mode == "test":
+        image_dir = os.path.join(a.test_image_dir, "results")
+    else:
+        image_dir = os.path.join(a.output_dir, "images")
     if not os.path.exists(image_dir):
         os.makedirs(image_dir)
 
