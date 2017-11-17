@@ -15,7 +15,7 @@ def convert_depth_file(pickle_path, jpg_path):
             np_arr = np_arr.astype(np.float32) / 1e4 * 255
             im = Image.fromarray(np.floor(np_arr))
             im = im.transpose(Image.FLIP_LEFT_RIGHT)
-            im = im.resize((128,128), Image.ANTIALIAS)
+            im = im.resize((256,256), Image.ANTIALIAS)
             if im.mode != 'RGB':
                     im = im.convert('RGB')
             im.save(jpg_path + pickle_filename.replace(".pickle", "_D.jpg").replace("depth_1", "img_1"))

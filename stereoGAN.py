@@ -20,7 +20,7 @@ parser.add_argument("--input_dir", default="/cvgl2/u/hhlics/dataset_depth/", hel
 parser.add_argument("--depth_dir", default="/cvgl2/u/hhlics/dataset_depth/", help="path to folder containing images")# done: set default path to the dataset
 parser.add_argument("--test_image_dir",default="/cvgl/u/zackwang/dataset_depth", help="path to folder containing test images")
 parser.add_argument("--mode", required=True, choices=["train", "test", "export"])
-parser.add_argument("--output_dir", default= "outputs",required=True, help="where to put output files") # done: set default path for the output directory
+parser.add_argument("--output_dir", default= "outputs", help="where to put output files") # done: set default path for the output directory
 parser.add_argument("--checkpoint", default="ckpt", help="directory with checkpoint to resume training from or use for testing") # done: set default path for the checkpoint directory
 parser.add_argument("--seed", type=int)
 
