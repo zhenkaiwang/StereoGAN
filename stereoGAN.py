@@ -29,8 +29,8 @@ parser.add_argument("--max_epochs", type=int, default=200, help="number of train
 parser.add_argument("--summary_freq", type=int, default=100, help="update summaries every summary_freq steps")
 parser.add_argument("--progress_freq", type=int, default=50, help="display progress every progress_freq steps")
 parser.add_argument("--trace_freq", type=int, default=0, help="trace execution every trace_freq steps")
-parser.add_argument("--display_freq", type=int, default=1000, help="write current training images every display_freq steps")
-parser.add_argument("--save_freq", type=int, default=1000, help="save model every save_freq steps, 0 to disable")
+parser.add_argument("--display_freq", type=int, default=2000, help="write current training images every display_freq steps")
+parser.add_argument("--save_freq", type=int, default=2000, help="save model every save_freq steps, 0 to disable")
 
 parser.add_argument("--aspect_ratio", type=float, default=1.0, help="aspect ratio of output images (width/height)")
 parser.add_argument("--batch_size", type=int, default=64, help="number of images in batch") #set default batch size to be 16
@@ -212,9 +212,9 @@ def load_examples():
         raw_input_L = decode(contents_L,channels=1)
         raw_input_R = decode(contents_R,channels=1)
         raw_input_depth = decode(contents_depth,channels=1)
-        raw_input_L = tf.image.resize_images(raw_input_L, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.BICUBIC)
-        raw_input_R = tf.image.resize_images(raw_input_R, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.BICUBIC)
-        raw_input_depth = tf.image.resize_images(raw_input_depth, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.BICUBIC)
+        raw_input_L = tf.image.resize_images(raw_input_L, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+        raw_input_R = tf.image.resize_images(raw_input_R, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+        raw_input_depth = tf.image.resize_images(raw_input_depth, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
         raw_input_L = tf.image.convert_image_dtype(raw_input_L, dtype=tf.float32)
         raw_input_R = tf.image.convert_image_dtype(raw_input_R, dtype=tf.float32)
         raw_input_depth = tf.image.convert_image_dtype(raw_input_depth, dtype=tf.float32)
