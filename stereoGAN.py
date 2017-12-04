@@ -16,9 +16,9 @@ import time
 from PIL import Image
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--input_dir", default="/cvgl2/u/hhlics/dataset_depth/", help="path to folder containing images")# done: set default path to the dataset
-parser.add_argument("--depth_dir", default="/cvgl2/u/hhlics/dataset_depth/", help="path to folder containing images")# done: set default path to the dataset
-parser.add_argument("--test_image_dir",default="/cvgl/u/zackwang/dataset_depth", help="path to folder containing test images")
+parser.add_argument("--input_dir", default="/cvgl2/u/hhlics/dataset_depth_full/", help="path to folder containing images")# done: set default path to the dataset
+parser.add_argument("--depth_dir", default="/cvgl2/u/hhlics/dataset_depth_full/", help="path to folder containing images")# done: set default path to the dataset
+parser.add_argument("--test_image_dir",default="/cvgl/u/zackwang/dataset_depth_full", help="path to folder containing test images")
 parser.add_argument("--mode", required=True, choices=["train", "test", "export"])
 parser.add_argument("--output_dir", default= "outputs", help="where to put output files") # done: set default path for the output directory
 parser.add_argument("--checkpoint", default="ckpt", help="directory with checkpoint to resume training from or use for testing") # done: set default path for the checkpoint directory
@@ -29,11 +29,11 @@ parser.add_argument("--max_epochs", type=int, default=200, help="number of train
 parser.add_argument("--summary_freq", type=int, default=100, help="update summaries every summary_freq steps")
 parser.add_argument("--progress_freq", type=int, default=50, help="display progress every progress_freq steps")
 parser.add_argument("--trace_freq", type=int, default=0, help="trace execution every trace_freq steps")
-parser.add_argument("--display_freq", type=int, default=100, help="write current training images every display_freq steps")
+parser.add_argument("--display_freq", type=int, default=1000, help="write current training images every display_freq steps")
 parser.add_argument("--save_freq", type=int, default=1000, help="save model every save_freq steps, 0 to disable")
 
 parser.add_argument("--aspect_ratio", type=float, default=1.0, help="aspect ratio of output images (width/height)")
-parser.add_argument("--batch_size", type=int, default=16, help="number of images in batch") #set default batch size to be 16
+parser.add_argument("--batch_size", type=int, default=64, help="number of images in batch") #set default batch size to be 16
 parser.add_argument("--ngf", type=int, default=64, help="number of generator filters in first conv layer")
 parser.add_argument("--ndf", type=int, default=64, help="number of discriminator filters in first conv layer")
 parser.add_argument("--scale_size", type=int, default=256, help="scale images to this size before cropping to 256x256")
@@ -151,32 +151,32 @@ def load_examples():
         if a.test_image_dir is None or not os.path.exists(a.test_image_dir):
             raise Exception("test_image_dir does not exist")
 
-        input_L_paths = glob.glob(os.path.join(a.test_image_dir + "/img_L_1test/", "*.jpg"))
-        input_R_paths = glob.glob(os.path.join(a.test_image_dir + "/img_R_1test/", "*.jpg"))
-        depth_paths = glob.glob(os.path.join(a.test_image_dir + "/depth_1test/", "*.jpg"))
+        input_L_paths = glob.glob(os.path.join(a.test_image_dir + "/img_L_test/", "*.jpg"))
+        input_R_paths = glob.glob(os.path.join(a.test_image_dir + "/img_R_test/", "*.jpg"))
+        depth_paths = glob.glob(os.path.join(a.test_image_dir + "/depth_test/", "*.jpg"))
         decode = tf.image.decode_jpeg
 
         if len(input_L_paths) == 0:
-            raise Exception(a.test_image_dir + "/img_L_1test/" + " contains no image files")
+            raise Exception(a.test_image_dir + "/img_L_test/" + " contains no image files")
         if len(input_R_paths) == 0:
-            raise Exception(a.test_image_dir + "/img_R_1test/" + " contains no image files")
+            raise Exception(a.test_image_dir + "/img_R_test/" + " contains no image files")
         if len(depth_paths) == 0:
-            raise Exception(a.test_image_dir + "/depth_1test/" + " contains no depth files")
+            raise Exception(a.test_image_dir + "/depth_test/" + " contains no depth files")
     else:
         if a.input_dir is None or not os.path.exists(a.input_dir):
             raise Exception("input_dir does not exist")
 
-        input_L_paths = glob.glob(os.path.join(a.input_dir + "/img_L_1/", "*.jpg"))
-        input_R_paths = glob.glob(os.path.join(a.input_dir + "/img_R_1/", "*.jpg"))
-        depth_paths = glob.glob(os.path.join(a.depth_dir + "/depth_1/", "*.jpg"))
+        input_L_paths = glob.glob(os.path.join(a.input_dir + "/img_L_train/", "*.jpg"))
+        input_R_paths = glob.glob(os.path.join(a.input_dir + "/img_R_train/", "*.jpg"))
+        depth_paths = glob.glob(os.path.join(a.depth_dir + "/depth_train/", "*.jpg"))
         decode = tf.image.decode_jpeg
 
         if len(input_L_paths) == 0:
-            raise Exception(a.input_dir + "/img_L/" + " contains no image files")
+            raise Exception(a.input_dir + "/img_L_train/" + " contains no image files")
         if len(input_R_paths) == 0:
-            raise Exception(a.input_dir + "/img_R/" + " contains no image files")
+            raise Exception(a.input_dir + "/img_R_train/" + " contains no image files")
         if len(depth_paths) == 0:
-            raise Exception(a.depth_dir + "/depth_1/" + " contains no depth files")
+            raise Exception(a.depth_dir + "/depth_train/" + " contains no depth files")
 
     def get_name(path):
         name, _ = os.path.splitext(os.path.basename(path))
@@ -194,8 +194,8 @@ def load_examples():
         input_L_paths = sorted(input_L_paths)
         input_R_paths = sorted(input_R_paths)
         depth_paths = sorted(depth_paths)
-    for i in range(len(input_L_paths)):
-        print('path '+ str(i) + ': ' + input_L_paths[i]+'\n'+input_R_paths[i]+'\n'+depth_paths[i]+'\n')
+    #for i in range(len(input_L_paths)):
+    #    print('path '+ str(i) + ': ' + input_L_paths[i]+'\n'+input_R_paths[i]+'\n'+depth_paths[i]+'\n')
 
     with tf.name_scope("load_images"):
         path_L_queue = tf.train.string_input_producer(input_L_paths, shuffle=True, seed=42)#a.mode == "train")
@@ -212,9 +212,9 @@ def load_examples():
         raw_input_L = decode(contents_L,channels=1)
         raw_input_R = decode(contents_R,channels=1)
         raw_input_depth = decode(contents_depth,channels=1)
-        # raw_input_L = tf.image.resize_images(raw_input_L, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.BICUBIC)
-        # raw_input_R = tf.image.resize_images(raw_input_R, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.BICUBIC)
-        # raw_input_depth = tf.image.resize_images(raw_input_depth, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.BICUBIC)
+        raw_input_L = tf.image.resize_images(raw_input_L, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.BICUBIC)
+        raw_input_R = tf.image.resize_images(raw_input_R, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.BICUBIC)
+        raw_input_depth = tf.image.resize_images(raw_input_depth, size=(a.scale_size,a.scale_size), method=tf.image.ResizeMethod.BICUBIC)
         raw_input_L = tf.image.convert_image_dtype(raw_input_L, dtype=tf.float32)
         raw_input_R = tf.image.convert_image_dtype(raw_input_R, dtype=tf.float32)
         raw_input_depth = tf.image.convert_image_dtype(raw_input_depth, dtype=tf.float32)
