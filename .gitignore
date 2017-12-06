@@ -8,3 +8,6 @@ terraform.tfvars
 .idea
 outputs/
 ckpt/
+outputs_mono/
+ckpt_mono/
+model_backups/
