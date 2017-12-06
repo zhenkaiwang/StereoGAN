@@ -13,6 +13,7 @@ def main():
     mean_errors=[]
     for file_output in os.listdir(a.image_dir):
         if fnmatch.fnmatch(file_output, '*outputs.png'):
+            file_target=file_output[:-11]+'targets.png'
             image_output=np.asarray(Image.open(a.image_dir+'/'+file_output))
             image_target=np.asarray(Image.open(a.image_dir+'/'+file_target))
             mean_errors.append(np.mean(image_target-image_output))
