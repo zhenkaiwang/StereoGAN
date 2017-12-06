@@ -648,6 +648,7 @@ def main():
 
     for grad, var in model.discrim_grads_and_vars + model.gen_grads_and_vars:
         tf.summary.histogram(var.op.name + "/gradients", grad)
+    tf.summary.merge_all()
 
     with tf.name_scope("parameter_count"):
         parameter_count = tf.reduce_sum([tf.reduce_prod(tf.shape(v)) for v in tf.trainable_variables()])
