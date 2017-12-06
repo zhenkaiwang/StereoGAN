@@ -221,8 +221,8 @@ def load_examples():
         #     raise Exception("len(raw_input_L.get_shape().as_list()) != 3")
         
         # assertion = tf.assert_equal(tf.shape(raw_input_LR)[-1], 2, message="image does not have 2 channels") # check the image data has 2 channels
-        with tf.control_dependencies([assertion]):
-            raw_input_L = tf.identity(raw_input_L)
+        # with tf.control_dependencies([assertion]):
+        raw_input_L = tf.identity(raw_input_L)
 
         raw_input_L.set_shape([a.scale_size, a.scale_size, 1]) #Set the image channels size to be 2
         raw_input_depth.set_shape([a.scale_size, a.scale_size, 1]) 
