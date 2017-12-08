@@ -486,7 +486,7 @@ def main():
 
         # load some options from the checkpoint
         options = {"ngf", "ndf"}
-        with open(os.path.join(a.checkpoint, "options.json")) as f:
+        with open(os.path.join(a.output_dir, "options.json")) as f:
             for key, val in json.loads(f.read()).items():
                 if key in options:
                     print("loaded", key, "=", val)
