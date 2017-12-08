@@ -18,6 +18,6 @@ def main():
             image_target=np.asarray(Image.open(a.image_dir+'/'+file_target))
             mean_errors.append(np.mean(np.abs(image_target-image_output)))
     mean_errors=np.array(mean_errors)
-    print("Mean errors is "+ str(np.mean(mean_errors)) + " mm")
+    print("Mean errors is "+ str(np.mean(mean_errors*40)) + " mm")
 
 main()
