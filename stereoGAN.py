@@ -213,8 +213,9 @@ def load_examples():
         raw_input_L = decode(contents_L,channels=1)
         raw_input_R = decode(contents_R,channels=1)
         raw_input_depth = decode(contents_depth,channels=1)
-        print(raw_input_L.get_shape().as_list())
-        print(raw_input_depth.get_shape().as_list())
+        raw_input_L.set_shape([480, 480, 1]) #Set the image channels size to be 2
+        raw_input_R.set_shape([480, 480, 1])
+        raw_input_depth.set_shape([480, 480, 1]) 
         raw_input_L = tf.image.crop_to_bounding_box(raw_input_L, 90, 90, 300, 300)
         raw_input_R = tf.image.crop_to_bounding_box(raw_input_R, 90, 90, 300, 300)
         raw_input_depth = tf.image.crop_to_bounding_box(raw_input_depth, 90, 90, 300, 300)
