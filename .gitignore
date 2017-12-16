@@ -11,3 +11,4 @@ ckpt/
 outputs_mono/
 ckpt_mono/
 model_backups/
+logdir/
